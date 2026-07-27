@@ -233,7 +233,7 @@ class WorldMeshesModel():
             
             # Add object model, object transform, and object_mesh in dictionary.
             self.add_object(obj_name, object_model, object_transform, object_mesh, object_scaling,
-                            obj_data['env_index'])
+                            obj_data.get('env_index', 'all'))
     
     def create_object_model(self, object_name):
         """
@@ -322,7 +322,8 @@ class WorldMeshesModel():
         ------------------------------------------
         :return object_scaling: 1D Pytorch tensor of object scaling vector (sx,sy,sz)
         """
-        return torch.as_tensor(self.objects[object_name]['object_scaling'], device=self.device)
+        s = self.objects[object_name]['object_scaling']
+        return torch.tensor([s.x, s.y, s.z], device=self.device)
 
     def get_object_transform(self, object_name):
         """
@@ -330,7 +331,9 @@ class WorldMeshesModel():
         ------------------------------------------
         :return object_transform: 1D Pytorch tensor of object transform vector (x,y,z,rx,ry,rz,w).
         """
-        return torch.as_tensor(self.objects[object_name]['transform'], device=self.device)
+        t = self.objects[object_name]['transform']
+        return torch.tensor([t.p.x, t.p.y, t.p.z, t.q.x, t.q.y, t.q.z, t.q.w],
+                            device=self.device)
 
     def get_object_names(self):
         """
