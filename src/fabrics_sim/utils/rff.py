@@ -121,9 +121,9 @@ class RFF:
         coeff = self.freqs / sigma
         inner = torch.matmul(x, coeff.T)
 
-        d = (self.a * torch.cat([-torch.sin(inner), torch.cos(inner)], dim=-1)).numpy()
-        coeff = np.tile(coeff.numpy(), (2,1))
-        return torch.from_numpy(np.diag(d).dot(coeff))
+        trig = self.a * torch.cat([-torch.sin(inner), torch.cos(inner)], dim=-1)
+        coeff_tiled = torch.cat([coeff, coeff], dim=0)
+        return trig.unsqueeze(-1) * coeff_tiled
 
 
 class RFFKernel:
