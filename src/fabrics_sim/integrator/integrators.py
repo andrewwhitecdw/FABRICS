@@ -164,8 +164,9 @@ class SineAccelRampIntegrator():
 
         # Now update over the rest of the time interval following a zero-order hold of acceleration
         sub_dt = timestep - self._dt_max_accel
-        joint_position = joint_position + sub_dt * joint_velocity + .5 * sub_dt ** 2 * joint_accel
-        joint_velocity = joint_velocity + sub_dt * joint_accel
+        if sub_dt > 0:
+            joint_position = joint_position + sub_dt * joint_velocity + .5 * sub_dt ** 2 * joint_accel
+            joint_velocity = joint_velocity + sub_dt * joint_accel
 
         return (joint_position, joint_velocity, joint_accel)
 
