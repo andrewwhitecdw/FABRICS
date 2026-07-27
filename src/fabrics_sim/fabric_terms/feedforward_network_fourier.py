@@ -217,26 +217,21 @@ class FeedforwardFourierTerm(BaseFabricTerm):
         # If a forcing policy, then create an acceleration-based potential policy.
         if self.is_forcing_policy:
             # Stack the inputs.
-            inputs = torch.cat((x, features), dim=1)
+            x_for_grad = x.detach().requires_grad_(True)
+            inputs = torch.cat((x_for_grad, features), dim=1)
             # Create RFFs from inputs.
             rff_features = self.policy_rff.to_features(inputs.float())
 
-            # Function that creates a potential function.
-            def potential_function(inputs):
-                # Stack position and features (features should be target pose)
-                hidden_out = F.elu(self.policy_fc1(inputs), alpha = self.elu_alpha)
-                hidden_out2 = F.elu(self.policy_fc2(hidden_out), alpha = self.elu_alpha)
-                xdd_not_hd2 = self.policy_fc3(hidden_out2)
-                ones = torch.ones((x.shape[1], 1), device=self.device)
-                potential = (xdd_not_hd2 @ ones).sum(dim=0)
+            # Pass inputs through the layers.
+            hidden_out = F.elu(self.policy_fc1(rff_features), alpha = self.elu_alpha)
+            hidden_out2 = F.elu(self.policy_fc2(hidden_out), alpha = self.elu_alpha)
+            xdd_not_hd2 = self.policy_fc3(hidden_out2)
+            ones = torch.ones((x.shape[1], 1), device=self.device)
+            potential = (xdd_not_hd2 @ ones).sum(dim=0)
 
-                return potential
-            
             # Ensure the prioritized acceleration can derive from the gradient of a potential function
-            # Calculate a scalar function and take its gradient
-            potential_force =\
-                torch.autograd.functional.jacobian(potential_function,
-                    rff_features, create_graph=True).squeeze(0)[:,:self.space_dim]
+            # Calculate a scalar function and take its gradient w.r.t. position.
+            potential_force = torch.autograd.grad(potential, x_for_grad, create_graph=True)[0]
 
             # Calculate predicted damping coefficient
             # Stack the inputs.
