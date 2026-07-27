@@ -252,8 +252,9 @@ def parse_urdf_annotated(
         builder.joint_q[start + 4] = xform.q[1]
         builder.joint_q[start + 5] = xform.q[2]
         builder.joint_q[start + 6] = xform.q[3]
-        urdf_add_collision(
-            builder, root, robot.links[0].collisions, density, shape_ke, shape_kd, shape_kf, shape_mu)
+        if include_collisions:
+            urdf_add_collision(
+                builder, root, robot.links[0].collisions, density, shape_ke, shape_kd, shape_kf, shape_mu)
     else:
         if verbose:
             print("not floating")
@@ -367,8 +368,9 @@ def parse_urdf_annotated(
             cspace_names.append(joint.name)
             cspace2link.append(builder.joint_count-1)  # Minus 1 to get index.
             cspace_joint_limits.append((lower, upper))
-
-        link2cspace.append(len(cspace_names)-1)
+            link2cspace.append(len(cspace_names)-1)
+        else:
+            link2cspace.append(-1)
 
         if include_collisions:
             # add collisions
