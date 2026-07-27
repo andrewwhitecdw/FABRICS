@@ -8,5 +8,7 @@
 # its affiliates is strictly prohibited.
 
 cylinder1:
+  env_index: all
   type: cylinder
+  scaling: 1. 1. 1.
   transform: 0.5 0. 0.5 0. 0. 0. 1.
