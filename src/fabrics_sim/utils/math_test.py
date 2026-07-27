@@ -49,7 +49,7 @@ print(L_inv)
 
 print('L inv check', torch.inverse(L))
 
-#A_inv = torch.zeros_like(A)
+A_inv = torch.zeros_like(A)
 L = torch.zeros_like(A)
 L_inv = torch.zeros_like(A)
 
@@ -81,7 +81,6 @@ custom_time = (time.time() - start) / 100.
 
 start = time.time()
 for i in range(100):
-    start = time.time()
     A_inv_check = torch.inverse(A)
 torch.cuda.synchronize()
 torch_time = (time.time() - start) / 100.
