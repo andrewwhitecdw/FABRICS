@@ -700,7 +700,7 @@ if __name__ == "__main__":
             """
             for cycle in range(num_steps):
                 self.step(obj)
-                obj_val = obj.eval(self.m.unsqueeze(0), add_noise=False).squeeze().item()
+                obj_val = obj.eval(self.m.unsqueeze(0)).squeeze().item()
                 if verbose:
                     print("cycle %d) obj val: %f, mean:" % (cycle, obj_val), self.m,
                             "s|C|:", self.sigma * torch.linalg.norm(self.C).item())
