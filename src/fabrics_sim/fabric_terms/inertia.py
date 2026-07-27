@@ -52,6 +52,6 @@ class Inertia(BaseFabricTerm):
         @param features: features (inputs) to pass to this term.
         @return force: batch bxn tensor of policy forces
         """
-        force = torch.zeros(x.shape, requires_grad=True, device='cuda')
+        force = torch.zeros_like(x)
 
         return force
