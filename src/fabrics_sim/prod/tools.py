@@ -12,6 +12,7 @@ import glob
 import os
 import sys
 import time
+import warp as wp
 
 
 def write(s):
@@ -54,7 +55,7 @@ class ExpAvgTimer:
     cycles.
     
     Usage:
-        timer = SimpleTimer()
+        timer = ExpAvgTimer()
         while True:
             <stuff>
 
