@@ -1167,13 +1167,16 @@ class KinematicsNoVelocities(KinematicsBase):
     def _axes_from_fk_transforms(self):
         wp.launch(kernel=joint_axes_kernel,
                   dim=(self.batch_size, self.cspace_dim),
-                  inputs=[self.cspace2link, self.batch_link_transforms, self.local_joint_axes, self.batch_joint_axes], 
+                  inputs=[self.cspace2link, self.batch_link_transforms, self.local_joint_axes], 
+                  outputs=[self.batch_joint_axes], 
                   device=self.device)
 
     def _jacobians_from_axes(self):
         wp.launch(kernel=jacobians_from_axes_kernel,
                   dim=(self.batch_size, self.num_links, self.cspace_dim),
-                  inputs=[self.cspace2link, self.batch_link_transforms, self.batch_joint_axes, self.batch_link_jacobians], 
+                  inputs=[self.cspace2link, self.batch_link_transforms, self.batch_joint_axes,
+                          self.link_ancestory_matrix], 
+                  outputs=[self.batch_link_jacobians], 
                   device=self.device)
 
 class KinematicsStagewise(KinematicsNoVelocities):
@@ -1265,6 +1268,8 @@ class KinematicsOrigInterface(KinematicsNoVelocities):
                       self.joint_transforms_in_parent_coords,
                       self.local_joint_axes,
                       self.link_paths,
+                      self.link2cspace],
+                  outputs=[    
                       self.batch_link_transforms,
                       self.batch_joint_axes,
                       self.batch_link_spatial_velocities],
@@ -1282,6 +1287,8 @@ class KinematicsOrigInterface(KinematicsNoVelocities):
                       self.joint_parents,
                       self.joint_transforms_in_parent_coords,
                       self.local_joint_axes,
+                      self.link2cspace],
+                  outputs=[    
                       self.batch_link_transforms,
                       self.batch_joint_axes,
                       self.batch_link_spatial_velocities],
