@@ -510,7 +510,7 @@
     </collision>
   </link>
   <gazebo reference="palm_link">
-    <material value="Gazebo/Grey"/>
+    <material>Gazebo/Grey</material>
   </gazebo>
 
 
