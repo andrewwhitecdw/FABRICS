@@ -55,8 +55,8 @@ class ObservationSpace:
 
     def add(self, obs_tensor):
         if obs_tensor.shape[0] != self.batch_size:
-            msg = ("Invalid observation tensor shape:" + str(obs_tensor.shape)
-                    + "Expected batch size: %d, received batch size: %d" % obs_tensor.shape[0])
+            msg = ("Invalid observation tensor shape: %s. " % str(obs_tensor.shape)
+                    + "Expected batch size: %d, received batch size: %d" % (self.batch_size, obs_tensor.shape[0]))
             raise RuntimeError(msg)
         self.obs_tensors.append(obs_tensor)
         self.num_dims += obs_tensor.shape[1]
