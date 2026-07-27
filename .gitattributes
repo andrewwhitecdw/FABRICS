@@ -68,8 +68,8 @@
 
 # Video files
 # -----------
-# .mkl - Matroska Video file
-*.[mM][kK][lL] filter=lfs diff=lfs merge=lfs -text
+# .mkv - Matroska Video file
+*.[mM][kK][vV] filter=lfs diff=lfs merge=lfs -text
 
 # Data files
 # ----------
@@ -90,6 +90,6 @@
 # .pkl - Python pickle file
 *.[pP][kK][lL] filter=lfs diff=lfs merge=lfs -text
 # .pth - PyTorch file
-*.[pP][tT[hH] filter=lfs diff=lfs merge=lfs -text
+*.[pP][tT][hH] filter=lfs diff=lfs merge=lfs -text
 # .slx - compressed file that contains model information in XML format
 *.[sS][lL][xX] filter=lfs diff=lfs merge=lfs -text
