@@ -167,7 +167,7 @@ def eval_repulsion(
     ray_hit = wp.mesh_query_point(object_mesh, center_point, max_depth, inside, f, bary_u, bary_v)
     closest_point = wp.vec3()
     if ray_hit:
-        closest_point = mesh_eval_position(object_mesh, f, bary_u, bary_v)
+        closest_point = wp.mesh_eval_position(object_mesh, f, bary_u, bary_v)
     
     n = wp.normalize(closest_point - center_point)
     d = wp.length(closest_point - center_point)
@@ -283,10 +283,10 @@ def eval_repulsion_func(robot_body_pose, robot_body_velocity, allocated_data):
                   allocated_data['num_body_points'],
                   allocated_data['num_faces'],
                   allocated_data['ray_angles'],
-                  num_rays,
-                  allocated_data['collision_state']
+                  num_rays
                   ],
               outputs=[
+                  allocated_data['collision_state'],
                   allocated_data['metrics'],
                   allocated_data['forces'],
                   allocated_data['linear_maps'],
@@ -323,12 +323,12 @@ class Repulsion(torch.autograd.Function):
 
         # Map incoming Torch grads to our output variables
         # TODO: this should be allocated_data, not allocated_state
-        grads = { ctx.allocated_state['metrics']:
-                      wp.torch.from_torch(adj_metrics, dtype=mat33, ndim=3),
-                  ctx.allocated_state['forces']:
-                      wp.torch.from_torch(adj_forces, dtype=vec3, ndim=3),
-                  ctx.allocated_state['linear_maps']:
-                      wp.torch.from_torch(adj_linear_maps, dtype=float, ndim=4) }
+        grads = { ctx.allocated_data['metrics']:
+                      wp.torch.from_torch(adj_metrics, dtype=wp.mat33, ndim=3),
+                  ctx.allocated_data['forces']:
+                      wp.torch.from_torch(adj_forces, dtype=wp.vec3, ndim=3),
+                  ctx.allocated_data['linear_maps']:
+                      wp.torch.from_torch(adj_linear_maps, dtype=wp.float32, ndim=4) }
 
         # Calculate gradients
         ctx.tape.backward(grads=grads)
