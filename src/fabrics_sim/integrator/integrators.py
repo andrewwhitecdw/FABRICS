@@ -151,16 +151,8 @@ class SineAccelRampIntegrator():
         joint_accel = -torch.bmm(self._masses_inv, self._forces.unsqueeze(2)).squeeze(2)
 
         # First integrate to dt_max_accel following the sine wave
-        joint_position = -(joint_accel - joint_accel_prev) *\
-                         (np.sin(self._alpha * self._dt_max_accel) / self._alpha ** 2) + \
-                         joint_accel_prev * (self._dt_max_accel ** 2 / 2.) +\
-                         joint_velocity * self._dt_max_accel +\
-                         joint_position
-
-        joint_velocity = -(joint_accel - joint_accel_prev) *\
-                         (np.cos(self._alpha * self._dt_max_accel) / self._alpha) +\
-                         joint_accel_prev * self._dt_max_accel +\
-                         joint_velocity
+        joint_position = (joint_accel - joint_accel_prev) * (self._dt_max_accel / self._alpha - np.sin(self._alpha * self._dt_max_accel) / self._alpha ** 2) + joint_accel_prev * (self._dt_max_accel ** 2 / 2.) + joint_velocity * self._dt_max_accel + joint_position
+        joint_velocity = (joint_accel - joint_accel_prev) * ((1. - np.cos(self._alpha * self._dt_max_accel)) / self._alpha) + joint_accel_prev * self._dt_max_accel + joint_velocity
 
         # Now update over the rest of the time interval following a zero-order hold of acceleration
         sub_dt = timestep - self._dt_max_accel
@@ -201,17 +193,17 @@ class FirstOrderAccelIntegrator():
 
         # Simultaneously eval the acceleration at the current state and perturbed states.
         self._masses, self._forces, self._masses_inv = self._fabric(joint_position, joint_velocity, timestep)
-        joint_accel = -torch.bmm(self._masses_inv, self._forces.unsqueeze(2)).squeeze()
+        joint_accel = -torch.bmm(self._masses_inv, self._forces.unsqueeze(2)).squeeze(2)
         
         # Calculate acceleration gradient wrt position and velocity
-        qdd_grad_q = torch.zeros_like(cspace_dim, cspace_dim)
-        qdd_grad_qd = torch.zeros_like(cspace_dim, cspace_dim)
+        qdd_grad_q = torch.zeros(cspace_dim, cspace_dim, dtype=joint_accel.dtype, device=joint_accel.device)
+        qdd_grad_qd = torch.zeros(cspace_dim, cspace_dim, dtype=joint_accel.dtype, device=joint_accel.device)
         for i in range(cspace_dim):
             qdd_grad_q[:, i] = (joint_accel[i+1, :] - joint_accel[0,:]) / self._epsilon
             qdd_grad_qd[:, i] = (joint_accel[i+1+cspace_dim, :] - joint_accel[0,:]) / self._epsilon
 
         # Calculate the vector, A
-        A = qdd_grad_q * joint_velocity[0] + qdd_grad_qd * joint_accel[0]
+        A = qdd_grad_q @ joint_velocity[0] + qdd_grad_qd @ joint_accel[0]
 
         # Run updates on position, velocity
         joint_position = A * (timestep ** 3 / 6.) +\
