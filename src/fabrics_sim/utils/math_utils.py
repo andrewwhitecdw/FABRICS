@@ -84,7 +84,7 @@ class InverseCholesky(torch.autograd.Function):
             batch_size = A.shape[0]
             mat_dim = A.shape[1]
             wp.launch(kernel=cholesky_factorization,
-                      dim=(batch_size, mat_dim, mat_dim),
+                      dim=(batch_size,),
                       inputs=[
                           ctx.A,
                           mat_dim
@@ -94,7 +94,7 @@ class InverseCholesky(torch.autograd.Function):
                       device=ctx.device)
 
             wp.launch(kernel=inverse_lower_triangular_matrix,
-                  dim=(batch_size, mat_dim, mat_dim),
+                  dim=(batch_size,),
                   inputs=[
                       ctx.L,
                       mat_dim
@@ -113,7 +113,7 @@ class InverseCholesky(torch.autograd.Function):
         ctx.tape.backward()
 
         # Return adjoint w.r.t. inputs
-        return (wp.torch.to_torch(ctx.tape.gradients[ctx.L_inv]), None,
+        return (wp.torch.to_torch(ctx.tape.gradients[ctx.A]), None,
                 None, None, None)
 
 
@@ -121,4 +121,5 @@ def inverse_pd_matrix(A, A_inv, L, L_inv, device):
     L_inv = InverseCholesky.apply(A, A_inv, L, L_inv, device)
 
     A_inv.copy_(torch.bmm(L_inv.transpose(1,2), L_inv))
+    return A_inv
 
