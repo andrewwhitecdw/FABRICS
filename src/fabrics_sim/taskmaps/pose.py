@@ -217,6 +217,7 @@ def eval_pose_func(model, joint_q, mask, fk_kernel_data):
                   fk_kernel_data['target_body_index'],
                   fk_kernel_data['num_bodies']],
               outputs=[
+                  fk_kernel_data['body_q'],
                   fk_kernel_data['body_pos_o'],
                   fk_kernel_data['body_axis_x'],
                   fk_kernel_data['body_axis_y'],
