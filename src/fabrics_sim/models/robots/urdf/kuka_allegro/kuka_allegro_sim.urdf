@@ -5,6 +5,15 @@
 <!-- =================================================================================== -->
 <robot name="kuka_allegro" xmlns:xacro="http://www.ros.org/wiki/xacro">
   
+  <material name="Grey">
+    <color rgba="0.2 0.2 0.2 1"/>
+  </material>
+  <material name="Orange">
+    <color rgba="1.0 0.5 0.0 1"/>
+  </material>
+  <material name="color_j7">
+    <color rgba="0.2 0.2 0.2 1"/>
+  </material>
   <link name="iiwa7_link_0">
     <inertial>
       <!-- The following are not reliable values, and should not be used for modeling -->
