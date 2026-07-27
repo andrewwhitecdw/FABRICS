@@ -286,6 +286,7 @@ def eval_kinematics_with_velocities_and_axes_kernel(
         parent_linear_velocity = wp.spatial_bottom(parent_spatial_velocity)
         linear_velocity = parent_linear_velocity + wp.cross(parent_angular_velocity, parent_orig_to_child_orig)
 
+        angular_velocity = parent_angular_velocity
         if joint_type == wp.sim.JOINT_REVOLUTE:
             # If this is a revolute joint, the angular velocity of the link will update and we'll shift
             # the origin to the new joint.
@@ -356,11 +357,15 @@ def eval_kinematics_with_velocities_and_axes_multithreaded_kernel(
         parent_linear_velocity = wp.spatial_bottom(parent_spatial_velocity)
         linear_velocity = parent_linear_velocity + wp.cross(parent_angular_velocity, parent_orig_to_child_orig)
 
+        angular_velocity = parent_angular_velocity
         if joint_type == wp.sim.JOINT_REVOLUTE:
             # If this is a revolute joint, the angular velocity of the link will update and we'll shift
             # the origin to the new joint.
             joint_axis_in_world_coords = transform_vector(X_child2world, local_joint_axis)  # Compute joint axis in world coords.
             angular_velocity = parent_angular_velocity + qd * joint_axis_in_world_coords
+
+            # Write the world coord joint axis to memory for this joint.
+            batch_joint_axes[batch_index, cspace_index] = joint_axis_in_world_coords
 
         spatial_velocity = wp.spatial_vector(angular_velocity, linear_velocity)
 
@@ -372,7 +377,6 @@ def eval_kinematics_with_velocities_and_axes_multithreaded_kernel(
     # Write the outputs to memory.
     batch_link_transforms[batch_index, target_link_index] = X_child2world
     batch_link_spatial_velocities[batch_index, target_link_index] = spatial_velocity
-    batch_joint_axes[batch_index, cspace_index] = joint_axis_in_world_coords
 
 
 @wp.kernel
@@ -1148,6 +1152,8 @@ class KinematicsNoVelocities(KinematicsBase):
                       self.joint_parents,
                       self.joint_transforms_in_parent_coords,
                       self.local_joint_axes,
+                      self.link2cspace],
+                  outputs=[
                       self.batch_link_transforms],
                   device=self.device)
 
@@ -1161,6 +1167,8 @@ class KinematicsNoVelocities(KinematicsBase):
                       self.joint_transforms_in_parent_coords,
                       self.local_joint_axes,
                       self.link_paths,
+                      self.link2cspace],
+                  outputs=[
                       self.batch_link_transforms],
                   device=self.device)
 
