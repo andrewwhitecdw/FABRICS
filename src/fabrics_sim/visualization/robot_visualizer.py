@@ -70,7 +70,7 @@ class RobotVisualizer():
             ArticulationView(prim_paths_expr=robot_range, name="robots_view")
         self.robots_view.initialize()
         self.robots_view.set_enabled_self_collisions(np.array([False] * batch_size))
-        self.robots_view.set_body_disable_gravity(np.zeros((batch_size, self.robots_view.num_bodies)))
+        self.robots_view.set_body_disable_gravity(np.zeros((batch_size, self.robots_view.num_bodies), dtype=bool))
 
         # Add robot view to world
         self.world.scene.add(self.robots_view)
