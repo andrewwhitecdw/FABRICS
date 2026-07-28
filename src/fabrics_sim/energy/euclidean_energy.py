@@ -29,9 +29,11 @@ class EuclideanEnergy(Energy):
         self.batch_size = batch_size
         self.num_joints = num_joints
 
-        self.init_energy()
+        self.init_energy(
+            torch.zeros(self.batch_size, self.num_joints, device=self.device)
+        )
 
-    def init_energy(self):
+    def init_energy(self, x):
         # If the energy, metric, and xdd (acceleration) has not yet been calculated,
         # then calculated once and reuse subsequently.
         # Rebuild all static tensors if their batch size does not match that of the
@@ -57,6 +59,8 @@ class EuclideanEnergy(Energy):
         @return self.force: batch force, a bxm tensor
         @return self.energy: batch energy, a b-sized tensor
         """
+
+        self.init_energy(x)
 
         # Calculate energy. The energy is L = 1/2 xd' I xd
         energy = 0.5 * torch.sum(xd*xd, dim=1).unsqueeze(1)
