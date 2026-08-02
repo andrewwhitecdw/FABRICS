@@ -22,7 +22,7 @@ class TrackingError(BaseMap):
         """
         super().__init__(device)
 
-        self.joint_error_limits = torch.tensor(joint_error_limits, device='cuda')
+        self.joint_error_limits = torch.tensor(joint_error_limits, device=self.device)
         self.joint_error_limits_batch = None
 
     def forward_position(self, q, features):
@@ -31,7 +31,7 @@ class TrackingError(BaseMap):
 
         if (self.joint_error_limits_batch is None) or \
            (self.joint_error_limits_batch.shape[0] != q.shape[0]):
-            self.joint_error_limits_batch = torch.zeros(q.shape, device='cuda')
+            self.joint_error_limits_batch = torch.zeros(q.shape, device=self.device)
             with torch.no_grad():
                 for i in range(q.shape[1]):
                     self.joint_error_limits_batch[:,i] = self.joint_error_limits[i]
@@ -42,6 +42,6 @@ class TrackingError(BaseMap):
 
         # TODO: need to ensure that below is actually element-wise division
         # TODO: need to check if this jacobian is accurate
-        jacobian = torch.diag_embed(-error / (error.abs() + 1e-5))
+        jacobian = torch.diag_embed(-10. * error / (error.abs() + 1e-5))
 
         return (x, jacobian)
