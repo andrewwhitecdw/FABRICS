@@ -181,6 +181,7 @@ class BaseFabric(torch.nn.Module):
                     new_accel_limits[i] = (self.jerk_limits[i] * timestep) / 2.
 
             # Save updated accel limits
+            self.allocated_data['accel_limits_torch'] = new_accel_limits
             self.allocated_data['accel_limits'] =\
                     wp.torch.from_torch(new_accel_limits)
             
@@ -523,7 +524,7 @@ class BaseFabric(torch.nn.Module):
         # Add extra energization coefficient if specified. Applied along unit velocity
         if self.fabric_params.get('cspace_energization'):
             force = force + self.fabric_params['cspace_energization']['scalar'] * \
-                    torch.bmm(metric, torch.nn.functional.normalize(qd).unsqueeze(2)).squeeze()
+                    torch.bmm(metric, torch.nn.functional.normalize(qd).unsqueeze(2)).squeeze(2)
         
         if self.fabric_params['speed_control']['active']:
             speed_control_damping =\
@@ -567,9 +568,9 @@ class BaseFabric(torch.nn.Module):
         """
 
         # Get mass and force from natural eval and calculate acceleration from that.
-        [M, f, M_inv] = self.eval_natural(q, qd)
+        [M, f, M_inv] = self.eval_natural(q, qd, timestep)
         qdd = -torch.bmm(M_inv, f.unsqueeze(2))
-        qdd = qdd.squeeze()
+        qdd = qdd.squeeze(2)
 
         return qdd
 
