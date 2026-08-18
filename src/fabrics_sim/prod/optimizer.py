@@ -504,7 +504,7 @@ class CmaOptimizer:
                  cov_norm_thresh: Optional[float] = None,
                  cov_rms_thresh: Optional[float] = None,
                  measurement_objective: Optional[VectorizedObjective] = None,
-                 verbose: bool = False) -> torch.Tensor:
+                 verbose: bool = False) -> CmaOptResult:
         """ Optimize the provided objective starting from the provided mean and covariance.
 
         Args:
@@ -674,7 +674,7 @@ if __name__ == "__main__":
             self.m += c_m * self.sigma * weighted_step
 
             # Block verified
-            self.p_s = (1.-c_s) * self.p_s + math.sqrt(c_s * (2. - c_s) * mu_eff) * C_inv_sqrt * weighted_step
+            self.p_s = (1.-c_s) * self.p_s + math.sqrt(c_s * (2. - c_s) * mu_eff) * (C_inv_sqrt @ weighted_step)
             p_s_norm = torch.linalg.norm(self.p_s)  # verified
             self.sigma = self.sigma * math.exp(c_s / d_s * (p_s_norm / self.mean_n01  - 1.))
 
@@ -1026,6 +1026,10 @@ if __name__ == "__main__":
             self.x_constraint = x_constraint
             self.constraint_cost = constraint_cost
 
+        @property
+        def hard_constraint_thresh(self):
+            return self.x_constraint
+
         def eval(self, samples: torch.Tensor) -> torch.Tensor:
             bad_indices = samples[:,0] > self.x_constraint
             costs = self.obj.eval(samples)
@@ -1179,7 +1183,11 @@ if __name__ == "__main__":
             torch.manual_seed(101)
 
             noise_std_dev = .0
-            obj = SimpleObjective(noise_std_dev=noise_std_dev)
+            obj = SimpleObjective()
+
+            # Verify that HardConstrainedObjective exposes the constraint threshold.
+            hc_obj = HardConstrainedObjective(obj, x_constraint=0.5)
+            self.assertEqual(hc_obj.hard_constraint_thresh, 0.5)
 
             print("creating optimizer")
             optimizer = CmaOptimizerStandard(dim=obj.dim, num_samples=10)
