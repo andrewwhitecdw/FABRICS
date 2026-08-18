@@ -24,8 +24,10 @@ def transform_mesh_points(
 
     for i in range(num_meshes):
         if tid >= mesh_object_starting_face_index[i] and tid <= mesh_object_ending_face_index[i]:
-            transformed_mesh_points[tid] =\
-                    wp.transform_point(mesh_object_transforms[i], mesh_points[tid])
+            p = mesh_points[tid]
+            p_h = wp.vec4(p.x, p.y, p.z, 1.0)
+            t_p = wp.mul(mesh_object_transforms[i], p_h)
+            transformed_mesh_points[tid] = wp.vec3(t_p.x, t_p.y, t_p.z)
             #break
 
 class WorldMeshModel():
@@ -77,13 +79,11 @@ class WorldMeshModel():
 
     def update_mesh(self, objects_transforms_list, robot_pose):
         # First find the transfrom from robot to objects, T_r_o
-        for i in range(len(objects_transforms_list)):
-            # Robot world expressed in robot
-            T_r_w = np.linalg.inv(robot_pose)
-            # Object expressed in robot
-            T_w_o = objects_transforms_list[i]
-            T_r_o = np.dot(T_r_w, T_w_o)
-            objects_transforms_list[i] = T_r_o
+        T_r_w = np.linalg.inv(robot_pose)
+        objects_transforms_list = [
+            np.dot(T_r_w, T_w_o)
+            for T_w_o in objects_transforms_list
+        ]
        
         # Convert list of object poses expressed in robot into warp array.
         objects_transforms = wp.array(objects_transforms_list, dtype=wp.mat44, device='cuda')
@@ -125,7 +125,7 @@ def transform_single_mesh_points(
 
     tid = wp.tid()
     # First scale the body points expressed in body-centric coordinate system
-    transformed_robot_body_points[tid] = cw_mul(scaling, robot_body_points[tid])
+    transformed_robot_body_points[tid] = wp.cw_mul(scaling, robot_body_points[tid])
 
     # Now transform the scaled points
     transformed_robot_body_points[tid] =\
@@ -213,7 +213,7 @@ class WorldMeshesModel():
                 q=(x_form[3], x_form[4], x_form[5], x_form[6]))
             
             # Pull out the object scaling
-            scaling = [float(x) for x in obj_data['scaling'].split()]
+            scaling = [float(x) for x in obj_data.get('scaling', '1. 1. 1.').split()]
             object_scaling = wp.vec3(scaling[0], scaling[1], scaling[2])
 
             # Transform points.
